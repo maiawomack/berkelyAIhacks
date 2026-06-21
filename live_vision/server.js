@@ -1,8 +1,18 @@
-require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") });
+require("dotenv").config({ path: require("path").resolve(__dirname, "../.env"), override: true });
 const express = require("express");
 const path = require("path");
 const os = require("os");
 const http = require("http");
+const fs = require("fs");
+
+// Hard fallback: read key directly from .env if dotenv didn't set it
+if (!process.env.ANTHROPIC_API_KEY) {
+  try {
+    const raw = fs.readFileSync(path.resolve(__dirname, "../.env"), "utf8");
+    const m = raw.match(/^ANTHROPIC_API_KEY=(.+)$/m);
+    if (m) process.env.ANTHROPIC_API_KEY = m[1].trim();
+  } catch (_) {}
+}
 const localtunnel = require("localtunnel");
 const Anthropic = require("@anthropic-ai/sdk");
 
@@ -58,6 +68,7 @@ app.post("/analyze", async (req, res) => {
   }
 
   const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] API key set: ${!!process.env.ANTHROPIC_API_KEY}, length: ${process.env.ANTHROPIC_API_KEY?.length}`);
 
   try {
     const modelId = model === "haiku"
