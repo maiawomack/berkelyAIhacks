@@ -2,6 +2,7 @@ require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") }
 const express = require("express");
 const path = require("path");
 const os = require("os");
+const http = require("http");
 const localtunnel = require("localtunnel");
 const Anthropic = require("@anthropic-ai/sdk");
 
@@ -16,6 +17,27 @@ function getLocalIP() {
 const { analyzeFrame } = require("./analyzeFrame");
 
 const app = express();
+
+// Non-blocking call to triage HTTP server (python triage_http.py on port 8002).
+// Returns null if the server is not running — vision analysis is never blocked.
+function callTriage(frameResult) {
+  return new Promise((resolve) => {
+    const body = JSON.stringify(frameResult);
+    const req  = http.request(
+      { hostname: "localhost", port: 8002, path: "/triage", method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) } },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => { data += chunk; });
+        res.on("end",  () => { try { resolve(JSON.parse(data)); } catch { resolve(null); } });
+      }
+    );
+    req.on("error", () => resolve(null));
+    req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+    req.write(body);
+    req.end();
+  });
+}
 const PORT = 3000;
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -44,7 +66,11 @@ app.post("/analyze", async (req, res) => {
     const result = await analyzeFrame(frame, mimeType || "image/jpeg", modelId);
     result.timestamp = timestamp;
     console.log(`[${timestamp}] frame_quality=${result.frame_quality} confidence=${result.confidence}`);
-    res.json({ ok: true, result });
+
+    const triage = await callTriage(result);
+    if (triage?.alert) console.log(`[${timestamp}] triage alert: ${triage.reason}`);
+
+    res.json({ ok: true, result, triage });
   } catch (err) {
     console.error(`[${timestamp}] analysis error:`, err.message);
     // Return a degraded result rather than crashing the loop

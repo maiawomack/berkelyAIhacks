@@ -12,3 +12,5 @@
 
 uagents==0.25.2
 anthropic==0.111.0
+flask>=3.0.0
+python-dotenv>=1.0.0

@@ -140,6 +140,35 @@
     }
 
     /* ── Critical log ── */
+    #triage-panel {
+      background: #0a0d14;
+      border: 1px solid #2a3a5a;
+      border-left: 3px solid #4466cc;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    #triage-panel-label {
+      font-size: 0.63rem;
+      letter-spacing: 0.1em;
+      color: #4466cc;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    #triage-text {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 0.76rem;
+      color: #99b8ee;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.55;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
     #critical-log-section {
       margin-top: 2px;
     }
@@ -333,6 +362,11 @@
         </div>
         <div id="top-hazard"></div>
         <div id="alert-line"></div>
+      </div>
+
+      <div id="triage-panel">
+        <div id="triage-panel-label">Dispatch Triage Alert</div>
+        <pre id="triage-text"></pre>
       </div>
 
       <div id="critical-log-section">
@@ -743,6 +777,10 @@ const statusEl  = document.getElementById("status");
         if (body.ok) {
           updateGlanceable(body.result);
           renderResult(body.result);
+          if (body.triage?.alert && body.triage.triage) {
+            document.getElementById("triage-panel").style.display = "block";
+            document.getElementById("triage-text").textContent = body.triage.triage;
+          }
           setStatus(`frame ${fc} — ok`);
         } else {
           setStatus(`frame ${fc} — error (see log)`);
