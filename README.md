@@ -1,3 +1,6 @@
+![tag:innovationlab](https://img.shields.io/badge/innovationlab-3D8BD3)
+![tag:hackathon](https://img.shields.io/badge/hackathon-5F43F1)
+
 🚨 Dispatch AI
 
 Your AI-powered emergency response assistant. When a 911 call comes in, a video link is automatically sent to the caller's phone. The caller points their camera at the scene, and our multi-agent system analyzes the live feed in real time — identifying the emergency type, assessing severity, and producing a structured dispatch brief for responders. No app download required. No dispatch center integration needed.
@@ -24,7 +27,6 @@ The vision agent analyzes frames every few seconds
 The triage agent converts visual data into a priority report
 The dispatch coordinator produces a structured brief
 The dispatcher sees the brief populate in real time — no manual input needed
-
 
 
 Demo note: The full system is designed to send an automatic SMS to the caller's phone the moment a 911 call comes in. Due to carrier regulations, US phone number SMS approval (A2P 10DLC) requires several days of processing time and could not be completed within the hackathon window. For this demo, the SMS link is delivered via a QR code displayed on the dispatcher dashboard — the caller scans it and the experience is identical from that point on. The SMS infrastructure (sms_trigger.py) is fully built and ready to activate once the number is approved.
