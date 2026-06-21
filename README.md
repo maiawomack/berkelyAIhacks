@@ -18,12 +18,17 @@ How It Works
 
 
 A 911 call comes in
-The caller receives an SMS link (or scans a QR code)
-They tap the link and point their camera at the scene
+The caller receives an SMS link and taps it to open the video session
+They point their camera at the scene
 The vision agent analyzes frames every few seconds
 The triage agent converts visual data into a priority report
 The dispatch coordinator produces a structured brief
 The dispatcher sees the brief populate in real time — no manual input needed
+
+
+
+Demo note: The full system is designed to send an automatic SMS to the caller's phone the moment a 911 call comes in. Due to carrier regulations, US phone number SMS approval (A2P 10DLC) requires several days of processing time and could not be completed within the hackathon window. For this demo, the SMS link is delivered via a QR code displayed on the dispatcher dashboard — the caller scans it and the experience is identical from that point on. The SMS infrastructure (sms_trigger.py) is fully built and ready to activate once the number is approved.
+
 
 
 Agent Breakdown
@@ -32,7 +37,7 @@ AgentRoleIntake AgentSends the SMS/QR link, opens the video sessionVision AgentA
 
 Example Interaction
 
-Caller scans QR code and points camera at a house fire
+Caller clicks on the link and points camera at a house fire
 
 Vision Agent detects:
 
@@ -55,7 +60,7 @@ Timestamp:    2026-06-20T18:45:00Z
 
 What Makes This Different
 
-Our system requires nothing from the dispatch center, the agent outputs a standard CAD-compatible summary that any center can read. The innovation is pushing intelligence to the civilian side so the infrastructure barrier disappears entirely.
+Our system requires nothing from the dispatch center — the agent outputs a standard CAD-compatible summary that any center can read. The innovation is pushing intelligence to the civilian side so the infrastructure barrier disappears entirely.
 
 Example Queries
 
