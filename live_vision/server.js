@@ -72,14 +72,14 @@ app.post("/analyze", async (req, res) => {
   console.log(`[${timestamp}] API key set: ${!!process.env.ANTHROPIC_API_KEY}, length: ${process.env.ANTHROPIC_API_KEY?.length}`);
 
   try {
-    const modelId = model === "haiku"
-      ? "claude-haiku-4-5-20251001"
-      : "claude-sonnet-4-6";
+    const modelId = "claude-sonnet-4-6";
     const result = await analyzeFrame(frame, mimeType || "image/jpeg", modelId);
     result.timestamp = timestamp;
 
     // Merge audio distress so triage server can factor it in
-    if (audioSignal?.tone === "elevated" && audioSignal.distress_keywords_detected?.length) {
+    const WEAPON_KEYWORDS = ["gun", "knife", "weapon", "shot", "stabbed", "shooting", "armed", "attack", "assault"];
+    const hasWeapon = audioSignal?.distress_keywords_detected?.some(kw => WEAPON_KEYWORDS.includes(kw));
+    if (audioSignal?.distress_keywords_detected?.length && (audioSignal.tone === "elevated" || hasWeapon)) {
       result.audio_distress = true;
       result.audio_keywords = audioSignal.distress_keywords_detected;
     }
@@ -127,7 +127,7 @@ app.post("/triage-audio", async (req, res) => {
     audio_keywords: audioSignal.distress_keywords_detected || [],
     hazards: ["audio_distress"],
     confidence: audioSignal.confidence || 0.7,
-    notes: transcript ? `Caller audio: "${transcript.slice(-200)}"` : "Audio distress detected",
+    notes: transcript ? `CALLER TRANSCRIPT (extract location/school names for dispatch): "${transcript.slice(-400)}"` : "Audio distress detected",
     timestamp: new Date().toISOString(),
   };
 

@@ -62,6 +62,9 @@ Urgency scale (use internally to determine STATUS):
 Rules:
 - If silent_distress is true, urgency is at least 4; DISPATCH must include law enforcement (possible coercion or domestic violence)
 - If audio_distress is true, urgency is at least 3; include the caller's keywords in SCENE SUMMARY
+- If audio_keywords contains any weapon (gun, knife, shot, stabbed, shooting, armed, weapon), urgency is at least 4; DISPATCH must include law enforcement immediately
+- If audio_keywords or notes mention a weapon AND a school (any of: school, student, campus, classroom, teacher), urgency is 5 — CRITICAL ACTIVE SHOOTER; DISPATCH must include multiple law enforcement units, EMS staging, and notify school lockdown protocol
+- If the caller's audio (notes field) mentions a specific school name or location, include it by name in the DISPATCH and SCENE SUMMARY sections — do not use generic placeholders like "the school"
 - If confidence is below 0.3, prepend "LOW CONFIDENCE ASSESSMENT —" to the STATUS line
 - If fire is visible, always include Fire units
 - If person is unresponsive, urgency is at least 4

@@ -349,7 +349,6 @@
       <div id="controls">
         <button id="btn-start">Start Camera</button>
         <button id="btn-stop" disabled>Stop</button>
-        <button id="btn-model">Fast (Haiku)</button>
         <div id="status"></div>
       </div>
       <video id="video" autoplay playsinline muted></video>
@@ -423,7 +422,6 @@ const statusEl  = document.getElementById("status");
     let intervalId = null;
     let frameCount = 0;
     let pendingRequest = false;
-    let useHaiku = false;
 
     function setStatus(msg) { statusEl.textContent = msg; }
 
@@ -787,7 +785,7 @@ const statusEl  = document.getElementById("status");
         const resp = await fetch("/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
-          body: JSON.stringify({ frame: base64, mimeType: "image/jpeg", model: useHaiku ? "haiku" : "sonnet", audioSignal: latestAudioSignal }),
+          body: JSON.stringify({ frame: base64, mimeType: "image/jpeg", model: "sonnet", audioSignal: latestAudioSignal }),
         });
 
         const body = await resp.json();
@@ -846,13 +844,6 @@ const statusEl  = document.getElementById("status");
     btnStart.addEventListener("click", startCapture);
     btnStop.addEventListener("click",  stopCapture);
 
-    const btnModel = document.getElementById("btn-model");
-    btnModel.addEventListener("click", () => {
-      useHaiku = !useHaiku;
-      btnModel.textContent = useHaiku ? "Accurate (Sonnet)" : "Fast (Haiku)";
-      btnModel.style.color = useHaiku ? "#ffaa44" : "";
-      btnModel.style.borderColor = useHaiku ? "#ffaa44" : "";
-    });
 
     // --- Audio: live transcript + passive language detection + on-demand translation ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
