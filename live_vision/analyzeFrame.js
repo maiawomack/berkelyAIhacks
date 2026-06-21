@@ -96,7 +96,7 @@ Required schema:
 async function analyzeFrame(base64ImageData, mimeType = "image/jpeg", model = "claude-sonnet-4-6") {
   const response = await getClient().messages.create({
     model,
-    max_tokens: 1536,
+    max_tokens: 768,
     system: SYSTEM_PROMPT,
     messages: [
       {

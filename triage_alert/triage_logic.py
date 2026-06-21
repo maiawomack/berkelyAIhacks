@@ -181,7 +181,7 @@ def adapt_frame(rich: dict) -> dict:
 
 def run_triage(scene_json: str) -> str:
     r = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-haiku-4-5-20251001",
         max_tokens=512,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": f"Scene data:\n{scene_json}"}],
@@ -244,8 +244,8 @@ def check_significant_change(previous_scene: dict, current_scene: dict) -> dict:
         current=json.dumps(current_scene, indent=2),
     )
     r = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=256,
+        model="claude-haiku-4-5-20251001",
+        max_tokens=128,
         messages=[{"role": "user", "content": prompt}],
     )
     raw = r.content[0].text.strip()

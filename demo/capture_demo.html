@@ -469,13 +469,13 @@
     const fileHint  = document.getElementById("file-hint");
 
     const INTERVAL_MS  = 1000;
-    const JPEG_QUALITY = 0.65;
+    const JPEG_QUALITY = 0.45;
     const MAX_WIDTH    = 640;
 
     let intervalId     = null;
     let frameCount     = 0;
     let pendingRequest = false;
-    let useHaiku       = false;
+    let useHaiku       = true;   // Haiku by default for speed
     let objectUrl      = null;
 
     function setStatus(msg) { statusEl.textContent = msg; }
@@ -849,16 +849,17 @@
     // ── Video file loading + playback ─────────────────────────────
     async function startCapture() {
       const file = fileInput.files[0];
-      if (!file) {
+
+      // If user picked a file, load it; otherwise use the auto-loaded src
+      if (file) {
+        if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+        objectUrl  = URL.createObjectURL(file);
+        video.src  = objectUrl;
+      } else if (!video.src) {
         setStatus("No video selected — use the file picker above.");
         return;
       }
 
-      // Release any previous object URL
-      if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
-
-      objectUrl   = URL.createObjectURL(file);
-      video.src   = objectUrl;
       video.loop  = true;
       video.muted = true;
 
@@ -892,13 +893,32 @@
     btnStart.addEventListener("click", startCapture);
     btnStop.addEventListener("click",  stopCapture);
 
+    // Start in Haiku mode — update button label to match
     const btnModel = document.getElementById("btn-model");
+    btnModel.textContent    = "Accurate (Sonnet)";
+    btnModel.style.color    = "#ffaa44";
+    btnModel.style.borderColor = "#ffaa44";
+
     btnModel.addEventListener("click", () => {
       useHaiku = !useHaiku;
       btnModel.textContent    = useHaiku ? "Accurate (Sonnet)" : "Fast (Haiku)";
       btnModel.style.color    = useHaiku ? "#ffaa44" : "";
       btnModel.style.borderColor = useHaiku ? "#ffaa44" : "";
     });
+
+    // Auto-load the demo video if it's sitting next to this HTML file
+    (function autoLoad() {
+      const DEMO_FILE = "DispatchAI - Small.mov";
+      video.src = DEMO_FILE;
+      video.onerror = () => {
+        video.src = "";
+        fileHint.textContent = "Select the demo video below";
+      };
+      video.onloadedmetadata = () => {
+        fileHint.textContent = `${DEMO_FILE} — ready. Click Start.`;
+        setStatus("Video ready — click Start to begin.");
+      };
+    })();
 
     // ── Audio: transcript + language detection + translation ──────
     const SpeechRecognition  = window.SpeechRecognition || window.webkitSpeechRecognition;
