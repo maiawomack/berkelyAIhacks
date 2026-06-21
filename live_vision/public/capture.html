@@ -786,7 +786,7 @@ const statusEl  = document.getElementById("status");
       try {
         const resp = await fetch("/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
           body: JSON.stringify({ frame: base64, mimeType: "image/jpeg", model: useHaiku ? "haiku" : "sonnet", audioSignal: latestAudioSignal }),
         });
 
@@ -894,7 +894,7 @@ const statusEl  = document.getElementById("status");
       try {
         const resp = await fetch("/detect-language", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
           body: JSON.stringify({ text: text.slice(-600) }),
         });
         const data = await resp.json();
@@ -921,7 +921,7 @@ const statusEl  = document.getElementById("status");
       try {
         const resp = await fetch("/translate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
           body: JSON.stringify({ text: text.slice(-600), from_language: currentLang }),
         });
         const data = await resp.json();
@@ -951,7 +951,7 @@ const statusEl  = document.getElementById("status");
         // Forward to triage server
         fetch("/triage-audio", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
           body: JSON.stringify({ audioSignal: sig, transcript: fullTranscript.slice(-400) }),
         }).then(r => r.json()).then(t => {
           if (t?.alert && t.triage) {
