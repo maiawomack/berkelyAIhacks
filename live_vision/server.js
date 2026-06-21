@@ -53,6 +53,7 @@ const getClient = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/demo", express.static(path.join(__dirname, "../demo")));
 
 let publicUrl = null;
 
