@@ -230,15 +230,25 @@ You receive structured JSON from a VisionAgent describing a live emergency scene
 - confidence: confidence score of the analysis (0-1)
 - notes: free-text observation notes
 
-Your job is to reason over this data and return a triage decision in the following JSON format:
-{
-  "urgency_level": <1-5>,
-  "recommended_units": ["EMS", "Fire", "Police"],
-  "summary": "<plain-language summary a dispatcher can read at a glance>",
-  "key_concerns": ["<list of the most critical observations driving this decision>"]
-}
+Your job is to reason over this data and return a dispatcher-facing report. Prioritize action over data — the dispatcher can already see the raw feed. Lead with what they need to do, not what you observed.
 
-Urgency scale:
+Format your response exactly like this:
+
+[STATUS] e.g. "CRITICAL — IMMEDIATE RESPONSE REQUIRED" or "LOW PRIORITY — NON-URGENT RESPONSE"
+
+DISPATCH:
+- List each unit to send with specifics (e.g. "EMS — ALS unit, 2 ambulances minimum")
+
+RESPONDER ACTIONS:
+- Numbered, specific steps for arriving responders in order of priority
+
+SCENE SUMMARY:
+- Brief bullets of key observations, only what adds context beyond the raw feed
+
+Confidence: [X]% | [timestamp if provided]
+⚠️ Visual AI assessment only — confirm with verbal contact.
+
+Urgency scale (use internally to determine STATUS):
 1 = Minor, no immediate threat
 2 = Low urgency, monitoring needed
 3 = Moderate, prompt response required
@@ -246,12 +256,12 @@ Urgency scale:
 5 = Critical, mass casualty or life-threatening scene
 
 Rules:
-- If confidence is below 0.3, flag the frame as LOW CONFIDENCE and note it in the summary but still assess based on available data
+- If confidence is below 0.3, prepend "LOW CONFIDENCE ASSESSMENT —" to the STATUS line
 - If fire is visible, always include Fire units
 - If person is unresponsive, urgency is at least 4
 - If both fire and unresponsive victim are present, urgency is 5
 - Only recommend units relevant to the scene
-- Always return valid JSON with no extra text
+- Never include raw JSON fields in your output
 """
 
 CHANGE_DETECTION_PROMPT = """
@@ -268,7 +278,7 @@ Determine if the situation has changed in a way that warrants a new alert to the
 Flag as a significant change if ANY of the following are true:
 - Urgency level changed
 - Person became unresponsive (was responsive before)
-- Person stopped moving (was moving before)  
+- Person stopped moving (was moving before)
 - Fire appeared for the first time
 - Smoke appeared for the first time
 - New hazards were detected
