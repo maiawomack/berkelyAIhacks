@@ -248,39 +248,92 @@
       return "field-ok";
     }
 
+    function label(text) {
+      return `<span class="field-label">${text}</span>`;
+    }
+
     function renderResult(r) {
       const lines = [];
 
-      const qClass = (r.frame_quality === "usable") ? "field-ok" : "field-moderate";
-      lines.push(`<span class="field-label">frame_quality     </span><span class="${qClass}">${r.frame_quality}</span>`);
-      lines.push(`<span class="field-label">confidence        </span>${(r.confidence * 100).toFixed(0)}%`);
-      lines.push(`<span class="field-label">people_count      </span>${r.people_count ?? "—"}`);
+      const qClass = r.frame_quality === "usable" ? "field-ok" : "field-moderate";
+      lines.push(`${label("frame_quality  ")} <span class="${qClass}">${r.frame_quality}</span>   ${label("confidence")} ${(r.confidence * 100).toFixed(0)}%`);
 
-      const injClass = r.injury_visible ? severityClass(r.injury_severity_estimate) : "field-ok";
-      lines.push(`<span class="field-label">injury_visible    </span><span class="${injClass}">${r.injury_visible} (${r.injury_severity_estimate ?? "—"})</span>`);
+      // Scene
+      if (r.scene) {
+        const s = r.scene;
+        lines.push("");
+        lines.push(`${label("── SCENE ──────────────────────────────")}`);
+        lines.push(`${label("environment    ")} ${s.environment ?? "—"}   ${label("location")} ${s.location_type ?? "—"}`);
+        lines.push(`${label("lighting       ")} ${s.lighting ?? "—"}   ${label("weather")} ${s.weather ?? "—"}`);
+        if (s.structural_damage_visible) {
+          lines.push(`${label("structure dmg  ")} <span class="field-high">YES — ${s.structural_damage_description ?? "visible"}</span>`);
+        }
+      }
 
-      const bleClass = r.bleeding_visible ? severityClass(r.bleeding_severity_estimate) : "field-ok";
-      lines.push(`<span class="field-label">bleeding_visible  </span><span class="${bleClass}">${r.bleeding_visible} (${r.bleeding_severity_estimate ?? "—"})</span>`);
+      // People
+      if (r.people && r.people.length) {
+        lines.push("");
+        lines.push(`${label("── PEOPLE (" + r.people.length + ") ─────────────────────────")}`);
+        r.people.forEach(p => {
+          const distClass = p.distress_level === "severe" ? "field-high"
+                          : p.distress_level === "moderate" ? "field-moderate" : "field-ok";
+          const respClass = p.responsive === "unresponsive" ? "field-high" : "field-ok";
+          lines.push(`${label("  [" + p.id + "] ")}${p.age_estimate} · ${p.position} · ${p.motion} · role: ${p.role_estimate}`);
+          lines.push(`      ${label("responsive")} <span class="${respClass}">${p.responsive}</span>   ${label("distress")} <span class="${distClass}">${p.distress_level ?? "—"}</span>`);
+        });
+      } else {
+        lines.push(`${label("people         ")} none detected`);
+      }
 
+      // Injuries
+      if (r.injuries && r.injuries.length) {
+        lines.push("");
+        lines.push(`${label("── INJURIES ────────────────────────────")}`);
+        r.injuries.forEach(inj => {
+          const sevClass = severityClass(inj.severity);
+          const bleedTxt = inj.bleeding ? " <span class='field-high'>+ bleeding</span>" : "";
+          lines.push(`  ${label("person " + inj.person_id)} <span class="${sevClass}">${inj.injury_type}</span> · ${inj.body_part ?? "unknown location"} · sev: <span class="${sevClass}">${inj.severity}</span>${bleedTxt}`);
+        });
+      }
+
+      // Objects
+      if (r.objects) {
+        const obj = r.objects;
+        const hasObj = obj.vehicles?.length || obj.weapons_visible || obj.medical_equipment_visible || obj.notable_objects?.length;
+        if (hasObj) {
+          lines.push("");
+          lines.push(`${label("── OBJECTS ─────────────────────────────")}`);
+          if (obj.vehicles?.length) {
+            const dmg = obj.vehicle_damage_visible ? " <span class='field-high'>(damaged)</span>" : "";
+            lines.push(`  ${label("vehicles       ")} ${obj.vehicles.join(", ")}${dmg}`);
+          }
+          if (obj.weapons_visible) {
+            lines.push(`  ${label("weapons        ")} <span class="field-high">${obj.weapon_types?.join(", ") || "visible"}</span>`);
+          }
+          if (obj.medical_equipment_visible) {
+            lines.push(`  ${label("medical equip  ")} ${obj.medical_equipment_types?.join(", ") || "visible"}`);
+          }
+          if (obj.notable_objects?.length) {
+            lines.push(`  ${label("notable        ")} ${obj.notable_objects.join(", ")}`);
+          }
+        }
+      }
+
+      // Hazards / Fire / Smoke
+      const hazards = r.hazards?.length ? r.hazards.join(", ") : "none";
+      const hazClass = r.hazards?.length ? "field-high" : "field-ok";
       const fireClass = (r.fire_visible || r.smoke_visible) ? "field-high" : "field-ok";
-      lines.push(`<span class="field-label">fire / smoke      </span><span class="${fireClass}">${r.fire_visible} / ${r.smoke_visible}</span>`);
+      lines.push("");
+      lines.push(`${label("── HAZARDS ─────────────────────────────")}`);
+      lines.push(`  ${label("fire / smoke   ")} <span class="${fireClass}">${r.fire_visible} / ${r.smoke_visible}</span>`);
+      lines.push(`  ${label("hazards        ")} <span class="${hazClass}">${hazards}</span>`);
 
-      lines.push(`<span class="field-label">person_motion     </span>${r.person_motion ?? "—"}`);
-      lines.push(`<span class="field-label">person_responsive </span>${r.person_responsive ?? "—"}`);
-
-      const hazards = (r.hazards && r.hazards.length) ? r.hazards.join(", ") : "none";
-      const hazClass = (r.hazards && r.hazards.length) ? "field-high" : "field-ok";
-      lines.push(`<span class="field-label">hazards           </span><span class="${hazClass}">${hazards}</span>`);
-
-      if (r.quality_issues && r.quality_issues.length) {
-        lines.push(`<span class="field-label">quality_issues    </span>${r.quality_issues.join(", ")}`);
+      if (r.quality_issues?.length) {
+        lines.push(`  ${label("quality issues  ")} ${r.quality_issues.join(", ")}`);
       }
 
-      if (r.notes) {
-        lines.push(`\n<span class="field-label">notes: </span>${r.notes}`);
-      }
-
-      lines.push(`\n<span class="field-label">timestamp: </span>${r.timestamp}`);
+      if (r.notes) lines.push(`\n${label("notes: ")}${r.notes}`);
+      lines.push(`${label("timestamp: ")}${r.timestamp}`);
 
       resultBox.innerHTML = lines.join("\n");
     }
@@ -291,8 +344,13 @@
         return;
       }
 
-      canvas.width  = video.videoWidth  || 640;
-      canvas.height = video.videoHeight || 480;
+      if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
+        addLog("skipped — video not ready yet");
+        return;
+      }
+
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
@@ -333,7 +391,8 @@
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         video.srcObject = stream;
-        await video.play();
+        // autoplay attribute handles play; explicit call can throw AbortError mid-load
+        video.play().catch(() => {});
 
         btnStart.disabled = true;
         btnStop.disabled  = false;
@@ -389,8 +448,7 @@
       const recognition = new SpeechRecognition();
       recognition.continuous    = false;
       recognition.interimResults = false;
-      // Empty lang lets the browser use its default, which works for many languages
-      recognition.lang = "";
+      // Omit lang so the browser uses its configured default
 
       btnDetect.disabled = true;
       btnDetect.classList.add("btn-recording");

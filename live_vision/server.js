@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") });
 const express = require("express");
 const path = require("path");
 const Anthropic = require("@anthropic-ai/sdk");
@@ -55,7 +55,9 @@ app.post("/detect-language", async (req, res) => {
         content: `Identify the language of the following text. Respond with ONLY valid JSON, no markdown: {"language": "<full language name in English>", "language_code": "<ISO 639-1 code>", "confidence": <0.0-1.0>}\n\nText: ${JSON.stringify(text)}`,
       }],
     });
-    const result = JSON.parse(response.content[0].text.trim());
+    const raw = response.content[0].text.trim();
+    const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const result = JSON.parse(fenceMatch ? fenceMatch[1].trim() : raw);
     console.log(`[detect-language] "${text.slice(0, 40)}…" → ${result.language}`);
     res.json(result);
   } catch (err) {
@@ -77,7 +79,9 @@ app.post("/translate", async (req, res) => {
         content: `Translate the following ${from_language || "text"} to English. Respond with ONLY valid JSON, no markdown: {"translation": "<translated text>"}\n\nText: ${JSON.stringify(text)}`,
       }],
     });
-    const result = JSON.parse(response.content[0].text.trim());
+    const raw = response.content[0].text.trim();
+    const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const result = JSON.parse(fenceMatch ? fenceMatch[1].trim() : raw);
     console.log(`[translate] "${text.slice(0, 40)}…" → "${result.translation?.slice(0, 40)}…"`);
     res.json(result);
   } catch (err) {
