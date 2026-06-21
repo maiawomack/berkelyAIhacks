@@ -186,6 +186,31 @@ app.post("/translate", async (req, res) => {
   }
 });
 
+app.post("/transcribe", async (req, res) => {
+  const { audio, mimeType } = req.body;
+  if (!audio) return res.json({ text: "" });
+
+  try {
+    const response = await getClient().messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 256,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: "Transcribe the spoken words in this audio clip exactly as heard. Return only the spoken words, nothing else. If there is no speech, return an empty string." },
+          { type: "audio", source: { type: "base64", media_type: mimeType || "audio/webm", data: audio } }
+        ]
+      }]
+    });
+    const text = response.content[0].text.trim();
+    console.log(`[transcribe] "${text.slice(0, 60)}…"`);
+    res.json({ text });
+  } catch (err) {
+    console.error("[transcribe] error:", err.message);
+    res.json({ text: "" });
+  }
+});
+
 app.listen(PORT, async () => {
   console.log(`Server running at http://localhost:${PORT}`);
 
