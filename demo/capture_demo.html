@@ -964,8 +964,16 @@
     // ── Calling screen — accept button ────────────────────────────
     const callScreen = document.getElementById("call-screen");
 
-    // Pre-load the video silently while the call screen is showing
-    video.src = "DispatchAI - Small.mov";
+    // Load video as a blob URL — required for captureStream() to work in Chrome
+    (async function preloadVideo() {
+      try {
+        const resp = await fetch("DispatchAI - Small.mov");
+        const blob = await resp.blob();
+        video.src  = URL.createObjectURL(blob);
+      } catch (e) {
+        setStatus("Could not load demo video — make sure server is running at localhost:3000");
+      }
+    })();
 
     document.getElementById("btn-accept").addEventListener("click", () => {
       callScreen.classList.add("fade-out");
